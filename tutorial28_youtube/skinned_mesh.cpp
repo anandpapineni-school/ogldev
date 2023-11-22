@@ -18,6 +18,7 @@
 
 #include "ogldev_engine_common.h"
 #include "skinned_mesh.h"
+#include "dual_quat_cu.hpp"
 
 using namespace std;
 
@@ -547,6 +548,7 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
         aiQuaternion RotationQ;
         CalcInterpolatedRotation(RotationQ, AnimationTimeTicks, pNodeAnim);
         Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
+        Dual_quat_cu dq(RotationM);
 
         // Interpolate translation and generate translation transformation matrix
         aiVector3D Translation;
