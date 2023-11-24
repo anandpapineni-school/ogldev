@@ -18,7 +18,6 @@
 
 #include "ogldev_engine_common.h"
 #include "skinned_mesh.h"
-
 #include <glm/gtx/dual_quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
