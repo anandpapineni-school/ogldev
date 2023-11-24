@@ -90,10 +90,13 @@ public:
     bool operator!= (const aiQuaterniont& o) const;
 
     // transform vector by matrix
+
     aiQuaterniont& operator *= (const aiMatrix4x4t<TReal>& mat);
 
-    bool Equal(const aiQuaterniont& o, TReal epsilon = 1e-6) const;
+    
 
+    bool Equal(const aiQuaterniont& o, TReal epsilon = 1e-6) const;
+    
 public:
 
     /** Normalize the quaternion */
@@ -107,6 +110,11 @@ public:
 
     /** Multiply two quaternions */
     aiQuaterniont operator* (const aiQuaterniont& two) const;
+
+    aiQuaterniont operator+ (const aiQuaterniont& r) const
+    {
+        return aiQuaterniont((w + r.w), (x + r.x), (y + r.y), (z + r.z));
+    }
 
 public:
 

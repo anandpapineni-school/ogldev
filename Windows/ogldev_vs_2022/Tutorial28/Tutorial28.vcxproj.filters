@@ -16,7 +16,6 @@
     <ClCompile Include="..\..\..\tutorial28_youtube\skinned_mesh.cpp" />
     <ClCompile Include="..\..\..\tutorial28_youtube\skinning_technique.cpp" />
     <ClCompile Include="..\..\..\tutorial28_youtube\tutorial28.cpp" />
-    <ClCompile Include="..\..\..\tutorial28_youtube\usage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Include\ogldev_texture.h" />

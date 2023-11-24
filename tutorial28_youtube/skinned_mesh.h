@@ -32,6 +32,7 @@
 #include "ogldev_texture.h"
 #include "ogldev_world_transform.h"
 #include "ogldev_material.h"
+#include "dual_quat_cu.hpp"
 
 class SkinnedMesh
 {
@@ -112,7 +113,7 @@ private:
     int GetBoneId(const aiBone* pBone);
     void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
     void CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
-    void CalcInterpolatedPosition(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
+    aiQuaternion CalcInterpolatedPosition(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
     uint FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim);
     uint FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim);
     uint FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim);

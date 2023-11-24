@@ -29,7 +29,6 @@
     <ClCompile Include="..\..\..\tutorial28_youtube\skinned_mesh.cpp" />
     <ClCompile Include="..\..\..\tutorial28_youtube\skinning_technique.cpp" />
     <ClCompile Include="..\..\..\tutorial28_youtube\tutorial28.cpp" />
-    <ClCompile Include="..\..\..\tutorial28_youtube\usage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Include\ogldev_texture.h" />
@@ -150,7 +149,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\Include;..\..\..\Include\assimp5</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\Include;..\..\..\Include\assimp5;C:\GL\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include; C:\GL\glew-2.1.0-win32\GLEWbin\include;C:\GL\glm-0.9.9.7\GLM</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

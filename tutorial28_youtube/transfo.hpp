@@ -125,6 +125,12 @@ struct Transfo {
         m[12] = 0.f; m[13] = 0.f; m[14] = 0.f; m[15] = 1.f;
     }
 
+    inline Transfo(const Matrix4f& v) {
+        m[0] = v[0]; m[1] = v[1]; m[2] = v[2]; m[3] = v[3];
+        m[4] = v[4]; m[5] = v[5]; m[6] = v[6]; m[7] = v[7];
+        m[8] = v[8]; m[9] = v[9]; m[10] = v[10]; m[11] = v[11];
+        m[12] = v[12]; m[13] = v[13]; m[14] = v[14]; m[15] = v[15];
+    }
     // -------------------------------------------------------------------------
     /// @name Accessors
     // -------------------------------------------------------------------------
@@ -191,8 +197,8 @@ struct Transfo {
 
     #if 0
     /// Full matrix multiplication against the Vec4
-    inline Vec4 operator*(const Vec4& v) const {
-        return Vec4(m[ 0] * v.x + m[ 1] * v.y + m[ 2] * v.z + m[ 3] * v.w,
+    inline Matrix4f operator*(const Matrix4f& v) const {
+        return Matrix4f(m[ 0] * v.x + m[ 1] * v.y + m[ 2] * v.z + m[ 3] * v.w,
                     m[ 4] * v.x + m[ 5] * v.y + m[ 6] * v.z + m[ 7] * v.w,
                     m[ 8] * v.x + m[ 9] * v.y + m[10] * v.z + m[11] * v.w,
                     m[12] * v.x + m[13] * v.y + m[14] * v.z + m[15] * v.w);

@@ -11,14 +11,19 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+            
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "ogldev_engine_common.h"
 #include "skinned_mesh.h"
-#include "dual_quat_cu.hpp"
+#include <dual_quat_cu.hpp>
+#include <quat_cu.hpp>
+#include <transfo.hpp>
+#include <glm/gtx/dual_quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 
 using namespace std;
 
@@ -27,6 +32,7 @@ using namespace std;
 #define NORMAL_LOCATION      2
 #define BONE_ID_LOCATION     3
 #define BONE_WEIGHT_LOCATION 4
+
 
 
 SkinnedMesh::~SkinnedMesh()
@@ -428,12 +434,13 @@ uint SkinnedMesh::FindPosition(float AnimationTimeTicks, const aiNodeAnim* pNode
 }
 
 
-void SkinnedMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
+aiQuaternion SkinnedMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
+    aiQuaternion check;
     // we need at least two values to interpolate...
     if (pNodeAnim->mNumPositionKeys == 1) {
         Out = pNodeAnim->mPositionKeys[0].mValue;
-        return;
+        return check;
     }
 
     uint PositionIndex = FindPosition(AnimationTimeTicks, pNodeAnim);
@@ -447,7 +454,8 @@ void SkinnedMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeT
     const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
     const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
     aiVector3D Delta = End - Start;
-    Out = Start + Factor * Delta;
+    aiQuaternion tQuat(Delta, 0);
+    return tQuat.Normalize();
 }
 
 
@@ -527,6 +535,21 @@ void SkinnedMesh::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTi
 }
 
 
+/*
+So I think this code is driving me insane, but I'm finally making some progress. This is an outline of steps to try and get this scene to work with Dual Quaternions
+
+    We need to take the 3x3 matrix that's given by the slerp in finding the rotation and combine it with the translation to create a dual quaternion
+
+    this dual quat can then be converted to a 4x4 transformation matrix and blended with the scale matrix.
+
+
+    OKAY SO NEW PLAN I THINK I KNOW WHAT THE PROBLEM IS
+
+    Hip/spine bone is moving exactly as intended so that means the issue is with blending so my dual quat multiplication math is probably wrong somewhere.
+
+*/
+
+
 void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const Matrix4f& ParentTransform)
 {
     string NodeName(pNode->mName.data);
@@ -534,6 +557,7 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
     const aiAnimation* pAnimation = pScene->mAnimations[0];
 
     Matrix4f NodeTransformation(pNode->mTransformation);
+    Matrix4f NodeTransConj;
 
     const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
 
@@ -542,25 +566,32 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
         aiVector3D Scaling;
         CalcInterpolatedScaling(Scaling, AnimationTimeTicks, pNodeAnim);
         Matrix4f ScalingM;
-        ScalingM.InitScaleTransform(Scaling.x, Scaling.y, Scaling.z);
+
 
         // Interpolate rotation and generate rotation transformation matrix
         aiQuaternion RotationQ;
         CalcInterpolatedRotation(RotationQ, AnimationTimeTicks, pNodeAnim);
         Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
-        Dual_quat_cu dq(RotationM);
+        
 
         // Interpolate translation and generate translation transformation matrix
         aiVector3D Translation;
-        CalcInterpolatedPosition(Translation, AnimationTimeTicks, pNodeAnim);
-        Matrix4f TranslationM;
-        TranslationM.InitTranslationTransform(Translation.x, Translation.y, Translation.z);
+        aiQuaternion TranslationQ = CalcInterpolatedPosition(Translation, AnimationTimeTicks, pNodeAnim);
+        TranslationQ.x *= 0.5;
+        TranslationQ.y *= 0.5;
+        TranslationQ.z *= 0.5;
+        aiQuaternion dualQuat = (RotationQ+TranslationQ)*RotationQ;
+        dualQuat.Normalize();
+        aiQuaternion dualQuatConj = RotationQ.Conjugate()+ TranslationQ.Conjugate();
+        NodeTransConj = Matrix4f(dualQuatConj.GetMatrix());
+        Matrix4f RotationTranslationM = Matrix4f(dualQuat.GetMatrix());
+        //RotationTranslationM.InitTranslationTransform(Translation.x, Translation.y, Translation.z);
 
         // Combine the above transformations
-        NodeTransformation = TranslationM * RotationM * ScalingM;
+        NodeTransformation = RotationTranslationM;
     }
 
-    Matrix4f GlobalTransformation = ParentTransform * NodeTransformation;
+    Matrix4f GlobalTransformation = NodeTransformation * ParentTransform;
 
     if (m_BoneNameToIndexMap.find(NodeName) != m_BoneNameToIndexMap.end()) {
         uint BoneIndex = m_BoneNameToIndexMap[NodeName];
